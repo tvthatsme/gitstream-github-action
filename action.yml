@@ -55,6 +55,7 @@ runs:
    
     - uses: actions/checkout@v2
     - run: mkdir -p ~/image-cache
+      shell: bash
     - id: image-cache
       uses: actions/cache@v1
       with:
@@ -64,8 +65,10 @@ runs:
       run: |
           docker pull gitstream/rules-engine:latest
           docker save -o ~/image-cache/gitstream/rules-engine.tar alpine
+      shell: bash
     - if: steps.image-cache.outputs.cache-hit == 'true'
       run: docker load -i ~/image-cache/gitstream/rules-engine.tar
+      shell: bash
     - name: run docker
       run: |
           docker run -v $(pwd)/gitstream:/code -e HEAD_REF=${{ github.event.inputs.head_ref }} -e BASE_REF=${{ github.event.inputs.base_ref }} -e CLIENT_PAYLOAD=${{ github.event.inputs.client_payload }} -e RULES_RESOLVER_URL=${{ github.event.inputs.resolver_url }} -e RULES_RESOLVER_TOKEN=${{ github.event.inputs.resolver_token }} gitstream/rules-engine
