@@ -34,7 +34,7 @@ runs:
       uses: actions/cache@v2
       with:
           path: ~/image-cache
-          key: image-cache-${{ runner.os }}
+          key: image-cache
     - if: steps.image-cache.outputs.cache-hit != 'true'
       run: |
           docker pull gitstream/rules-engine:latest
