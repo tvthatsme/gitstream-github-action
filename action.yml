@@ -64,10 +64,10 @@ runs:
     - if: steps.image-cache.outputs.cache-hit != 'true'
       run: |
           docker pull gitstream/rules-engine:latest
-          docker save -o ~/image-cache/gitstream/rules-engine.tar alpine
+          docker save -o ~/image-cache/rules-engine.tar alpine
       shell: bash
     - if: steps.image-cache.outputs.cache-hit == 'true'
-      run: docker load -i ~/image-cache/gitstream/rules-engine.tar
+      run: docker load -i ~/image-cache/rules-engine.tar
       shell: bash
     - name: run docker
       run: |
