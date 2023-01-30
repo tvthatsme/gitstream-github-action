@@ -27,6 +27,10 @@ inputs:
     description: 'Run parser in debug mode'
     required: false
     default: false
+  triggered_by:
+    description: workflow triggered_by username
+    required: false
+    default: ''
 
 runs:
   using: 'composite'
