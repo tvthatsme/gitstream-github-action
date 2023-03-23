@@ -64,7 +64,12 @@ runs:
         path: 'gitstream/repo/'
         token: ${{ fromJSON(fromJSON(github.event.inputs.client_payload)).githubToken || github.token }}
     
-    - run: |
+    - name: Checkout and fetch code
+      id: gitstream-action
+      ## this step will be skipped if cache exists
+      if: ${{ steps.cache-gitstream.outputs.cache-hit != 'true' }}
+      shell: bash
+      run: |
         all=2147483647
         cd gitstream
         cd repo
@@ -72,19 +77,6 @@ runs:
         git checkout -b ${{ github.event.inputs.base_ref }} origin/${{ github.event.inputs.base_ref }}
         git checkout ${{ github.event.inputs.head_ref }}
         git fetch --deepen=$all origin ${{ github.event.inputs.head_ref }}
-      shell: bash
-      ## this step will be skipped if cache exists
-      if: ${{ steps.cache-gitstream.outputs.cache-hit != 'true' }}
-      
-    - run: |
-        cd gitstream
-        cd repo
-        git fetch origin ${{ github.event.inputs.base_ref }}
-        git checkout ${{ github.event.inputs.head_ref }}
-        git fetch origin ${{ github.event.inputs.head_ref }}
-      shell: bash
-      ## this step will be skipped if cache exists
-      if: ${{ steps.cache-gitstream.outputs.cache-hit == 'true' }}
       
     - name: Create cm folder
       ## this step will be skipped if cache exists
