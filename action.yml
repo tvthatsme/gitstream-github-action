@@ -65,7 +65,7 @@ runs:
         token: ${{ fromJSON(fromJSON(github.event.inputs.client_payload)).githubToken || github.token }}
     
     - name: Checkout and fetch code
-      id: gitstream-action
+      id: checkout-and-fetch-code
       ## this step will be skipped if cache exists
       if: ${{ steps.cache-gitstream.outputs.cache-hit != 'true' }}
       shell: bash
