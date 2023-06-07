@@ -1,6 +1,5 @@
 name: 'gitStream repo agent'
 description: 'Public GitHub action for gitStream Continuous Merge'
-
 inputs:
   full_repository:
     description: 'Path of full Repository'
@@ -27,7 +26,6 @@ inputs:
     description: 'Run parser in debug mode'
     required: false
     default: false
-
 runs:
   using: 'composite'
   steps:
@@ -42,14 +40,24 @@ runs:
         mkdir gitstream
         cd gitstream
         mkdir repo
+
+    - name: Cache gitstream results
+      id: cache-gitstream-results
+      uses: actions/cache@v3
+      with:
+        path: gitstream/cache.json
+        key: ${{ fromJSON(fromJSON(github.event.inputs.client_payload)).headSha }}-gitsream-cache
+
     - name: Checkout head branch
       uses: actions/checkout@v3
+      if: ${{ steps.cache-gitstream-results.outputs.cache-hit != 'true' }}
       with:
         repository: ${{ inputs.full_repository }}
         ref: ${{ github.event.inputs.head_ref }}
         path: 'gitstream/repo/'
         token: ${{ fromJSON(fromJSON(github.event.inputs.client_payload)).githubToken || github.token }}
-    - run: |
+    - if: ${{ steps.cache-gitstream-results.outputs.cache-hit != 'true' }}
+      run: |
         all=2147483647
         cd gitstream
         cd repo
@@ -71,7 +79,6 @@ runs:
         repository: '${{ fromJSON(fromJSON(github.event.inputs.client_payload)).owner }}/${{ fromJSON(fromJSON(github.event.inputs.client_payload)).cmRepo }}'
         ref: ${{ fromJSON(fromJSON(github.event.inputs.client_payload)).cmRepoRef }}
         path: 'gitstream/cm/'
-        
     - name: Run The Action
       id: gitstream-action
       if: always()
@@ -80,7 +87,7 @@ runs:
         docker pull gitstream/rules-engine:stagingContainer
         echo "docker-pull-duration=$SECONDS" >> $GITHUB_OUTPUT
         SECONDS=0
-        docker run -v $(pwd)/gitstream:/code -e HEAD_REF=${{ github.event.inputs.head_ref }} -e BASE_REF=${{ github.event.inputs.base_ref }} -e CLIENT_PAYLOAD=${{ github.event.inputs.client_payload }} -e RULES_RESOLVER_URL=${{ github.event.inputs.resolver_url }} -e RULES_RESOLVER_TOKEN=${{ github.event.inputs.resolver_token }} -e DEBUG_MODE=${{ github.event.inputs.debug_mode }} gitstream/rules-engine:stagingContainer
+        docker run -v $(pwd)/gitstream:/code -e USE_CACHE=${{ steps.cache-gitstream-results.outputs.cache-hit }} -e HEAD_REF=${{ github.event.inputs.head_ref }} -e BASE_REF=${{ github.event.inputs.base_ref }} -e CLIENT_PAYLOAD=${{ github.event.inputs.client_payload }} -e RULES_RESOLVER_URL=${{ github.event.inputs.resolver_url }} -e RULES_RESOLVER_TOKEN=${{ github.event.inputs.resolver_token }} -e DEBUG_MODE=${{ github.event.inputs.debug_mode }} gitstream/rules-engine:stagingContainer
         echo "docker-run-duration=$SECONDS" >> $GITHUB_OUTPUT
         echo "action-run-duration=$(($EPOCHSECONDS - ${{ steps.start.outputs.timestamp }}))" >> $GITHUB_OUTPUT
       shell: bash
